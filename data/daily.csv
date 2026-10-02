@@ -1,0 +1,2 @@
+date,sleep_start,sleep_end,sleep_h,deep_h,rem_h,awake_min,sleep_score,hrv_last_night,hrv_weekly_avg,hrv_baseline_low,hrv_baseline_high,hrv_status,resting_hr,sleep_respiration,body_battery_change_overnight,readiness_score,readiness_level,recovery_time_h,training_status,acute_load,chronic_load,vo2max,yesterday,yesterday_steps,yesterday_avg_stress,yesterday_body_battery_high,yesterday_body_battery_low
+2026-10-02,00:49,09:24,8.25,1.75,1.53,20,89,87,81,79,90,BALANCED,47,12.0,63,15,POOR,57.5,PRODUCTIVE_9,1220,798,56.0,2026-10-01,15962,21,100,30
