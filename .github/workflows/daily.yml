@@ -1,0 +1,37 @@
+name: Daily Garmin recovery data
+
+on:
+  schedule:
+    - cron: "10 5 * * *"   # 05:10 UTC = 07:10 Oslo in summer, 06:10 in winter
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: garmin-fetch
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Fetch last night's data
+        env:
+          GARMIN_TOKEN_KEY: ${{ secrets.GARMIN_TOKEN_KEY }}
+        run: python fetch.py
+      - name: Commit data and refreshed tokens
+        if: always()
+        run: |
+          git config user.name "garmin-bot"
+          git config user.email "garmin-bot@users.noreply.github.com"
+          git add data state
+          git diff --cached --quiet || git commit -m "Garmin data $(date -u +%F)"
+          git push
