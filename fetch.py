@@ -52,7 +52,13 @@ def summarise(today: str, yday: str, raw: dict) -> dict:
     dto = g(sl, "dailySleepDTO", default={}) or {}
     secs = lambda k: dto.get(k) or 0
     asleep = secs("deepSleepSeconds") + secs("lightSleepSeconds") + secs("remSleepSeconds")
-    readiness = rd[0] if isinstance(rd, list) and rd else (rd if isinstance(rd, dict) else {})
+    # Readiness is recalculated during the day (after each workout). Keep the
+    # wake-up value as the headline, and the most recent one separately.
+    entries = rd if isinstance(rd, list) else ([rd] if isinstance(rd, dict) and "score" in rd else [])
+    entries = sorted(entries, key=lambda e: e.get("timestamp") or "")
+    wake = next((e for e in entries if e.get("inputContext") == "AFTER_WAKEUP_RESET"), entries[0] if entries else {})
+    latest = entries[-1] if entries else {}
+    readiness = wake
     vo2 = g(ts, "mostRecentVO2Max", "generic", "vo2MaxPreciseValue") or g(ts, "mostRecentVO2Max", "generic", "vo2MaxValue")
     status_map = g(ts, "mostRecentTrainingStatus", "latestTrainingStatusData", default={}) or {}
     tstatus = next(iter(status_map.values()), {}) if isinstance(status_map, dict) and status_map else {}
@@ -76,6 +82,8 @@ def summarise(today: str, yday: str, raw: dict) -> dict:
         "readiness_score": readiness.get("score"),
         "readiness_level": readiness.get("level"),
         "recovery_time_h": round(readiness["recoveryTime"] / 60, 1) if readiness.get("recoveryTime") is not None else None,
+        "readiness_now": latest.get("score"),
+        "readiness_now_context": latest.get("inputContext"),
         "training_status": tstatus.get("trainingStatusFeedbackPhrase") or tstatus.get("trainingStatus"),
         "acute_load": g(tstatus, "acuteTrainingLoadDTO", "dailyTrainingLoadAcute"),
         "chronic_load": g(tstatus, "acuteTrainingLoadDTO", "dailyTrainingLoadChronic"),
@@ -89,6 +97,7 @@ def summarise(today: str, yday: str, raw: dict) -> dict:
 
 
 def write_status(ok: bool, **extra) -> None:
+    print("STATUS:", ok, extra)
     DATA.mkdir(exist_ok=True)
     (DATA / "status.json").write_text(json.dumps(
         {"ok": ok, "ran_at": datetime.now(OSLO).isoformat(timespec="minutes"), **extra}, indent=2))
