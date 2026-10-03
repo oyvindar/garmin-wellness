@@ -2,7 +2,7 @@ name: Daily Garmin recovery data
 
 on:
   schedule:
-    -     - cron: "15 7,8 * * *"   # 09:15 and 10:15 Oslo (summer time); 08:15 and 09:15 in winter
+  - cron: "40 6 * * *"   # 08:40 Oslo now, 07:40 after the switch to winter time
   workflow_dispatch: {}     # lets you run it by hand from the Actions tab
 
 permissions:
